@@ -18,14 +18,14 @@ def main():
             # This is the "gross" payment
             transactions.append((
                 tstamp,
-                'Paypal - {Type} {Invoice Number} From {Name} {From Email Address}'.format(**line),
+                'Paypal Received - {Type} {Invoice Number} From {Name} {From Email Address}'.format(**line),
                 line['Gross'].replace(',', '')
             ))
 
             if line['Fee'] != '0.00':
                 transactions.append((
                     tstamp,
-                    'Paypal - {Type} Fee {Invoice Number} From {Name} {From Email Address}'.format(**line),
+                    'Paypal Paid - {Type} Fee {Invoice Number} From {Name} {From Email Address}'.format(**line),
                     line['Fee'].replace(',', '')
                 ))
 
