@@ -11,20 +11,21 @@ def main():
     transactions = []
     for f in args.infile:
         for line in csv.DictReader(f):
+            #print line
             # The single line has a gross payment and a fee payment, so we need to split those apart
             tstamp = time.strptime('{\xef\xbb\xbf"Date"} {Time}'.format(**line), '%d/%m/%Y %H:%M:%S')
 
             # This is the "gross" payment
             transactions.append((
                 tstamp,
-                'Paypal - {Type} From {Name}'.format(**line),
+                'Paypal - {Type} {Invoice Number} From {Name} {From Email Address}'.format(**line),
                 line['Gross'].replace(',', '')
             ))
 
             if line['Fee'] != '0.00':
                 transactions.append((
                     tstamp,
-                    'Paypal - {Type} Fee From {Name}'.format(**line),
+                    'Paypal - {Type} Fee {Invoice Number} From {Name} {From Email Address}'.format(**line),
                     line['Fee'].replace(',', '')
                 ))
 
