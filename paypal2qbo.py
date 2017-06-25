@@ -33,7 +33,7 @@ def main():
                     transactions.append((tstamp, 'Reversal: Reversal of dispute', line['Gross']))
 
                 elif line['Type'] == 'Hold on Balance for Dispute Investigation':
-                    transactions.append((tstamp, 'Sent: Dispute reclaim for {Invoice Number}', line['Gross']))
+                    transactions.append((tstamp, 'Spent: Dispute reclaim for {Invoice Number}', line['Gross']))
 
                 elif line['Type'] == 'General Withdrawal':
                     transactions.append((tstamp, 'Transfer: Paypal to bank account', line['Gross']))
@@ -50,10 +50,10 @@ def main():
                     if float(line['Gross']) > 0:
                         transactions.append((tstamp, 'Received: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
                     else:
-                        transactions.append((tstamp, 'Sent: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
+                        transactions.append((tstamp, 'Spent: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
 
                     if line['Fee'] != '0.00':
-                        transactions.append((tstamp, 'Sent: Fee {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Fee']))
+                        transactions.append((tstamp, 'Spent: Fee {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Fee']))
 
                 else:
                     transactions.append((tstamp, 'REVIEW: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
