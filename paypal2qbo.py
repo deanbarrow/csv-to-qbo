@@ -8,17 +8,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('infile', nargs='+', type=argparse.FileType('r'))
     args = parser.parse_args()
-    total = 0
     transactions = []
     for f in args.infile:
-        for line in csv.DictReader(f):
+        for idx, line in enumerate(csv.DictReader(f)):
+
+            # Set opening balance
+            if idx == 0:
+                total = Decimal(line['Balance']) - Decimal(line['Gross'])
+
             tstamp = time.strptime('{\xef\xbb\xbf"Date"} {Time}'.format(**line), '%d/%m/%Y %H:%M:%S')
             line['Gross'] = line['Gross'].replace(',','')
 
             # Ignore all other currencies as Paypal will convert to a single transaction inclusive of transaction and exchange fees
             if line['Currency'] == 'GBP':
 
-                if line['Type'] == 'Account Hold for Open Authorisation':
+                if (line['Type'] in ['Account Hold for Open Authorisation', 'Account Hold for ACH deposit']):
                     #transactions.append((tstamp, 'Sent: Account Hold for Open Authorisation', line['Gross']))
                     continue
 
@@ -36,10 +40,12 @@ def main():
                     transactions.append((tstamp, 'Spent: Dispute reclaim for {Invoice Number}', line['Gross']))
 
                 elif line['Type'] == 'General Withdrawal':
-                    transactions.append((tstamp, 'Transfer: Paypal to bank account', line['Gross']))
+                    print 1
+                    #transactions.append((tstamp, 'Transfer: Paypal to bank account', line['Gross']))
 
                 elif line['Type'] in ['General Credit Card Deposit', 'Bank Deposit to PP Account (Obsolete)', 'General Credit Card Withdrawal']:
-                    transactions.append((tstamp, 'Transfer: Bank account to Paypal', line['Gross']))
+                    print 1
+                    #transactions.append((tstamp, 'Transfer: Bank account to Paypal', line['Gross']))
 
                 elif line['Type'] == 'Payment Refund':
                     transactions.append((tstamp, 'Refund: Payment for {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
@@ -48,12 +54,13 @@ def main():
 
                 elif line['Type'] in ['Website Payment', 'General Currency Conversion', 'Pre-approved Payment Bill User Payment', 'eBay Auction Payment', 'Express Checkout Payment', 'General Payment']:
                     if float(line['Gross']) > 0:
-                        transactions.append((tstamp, 'Received: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
+                        transactions.append((tstamp, 'Received: {Invoice Number} From {Name} {From Email Address}, VAT: {VAT}'.format(**line), line['Gross']))
                     else:
-                        transactions.append((tstamp, 'Spent: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
+                        transactions.append((tstamp, 'Spent: {Invoice Number} From {Name} {From Email Address}, VAT: {VAT}'.format(**line), line['Gross']))
 
                     if line['Fee'] != '0.00':
-                        transactions.append((tstamp, 'Spent: Fee {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Fee']))
+                        print 1
+                        #transactions.append((tstamp, 'Spent: Fee {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Fee']))
 
                 else:
                     transactions.append((tstamp, 'REVIEW: {Invoice Number} From {Name} {From Email Address}'.format(**line), line['Gross']))
@@ -63,9 +70,11 @@ def main():
 
                 #Basic error checking, ensure Paypal balance matches transaction balance
                 total = Decimal(total) + Decimal(line['Gross']) + Decimal(line['Fee'])
+                #print line['Type'], line['Gross'], 'total', total
+                #print total, line['Gross'], line['Fee'], line['Balance'], line['Transaction ID']
                 if Decimal(total) != Decimal(line['Balance'].replace(',','')):
                     print "Error: balances are not equal, please check"
-                    print total, line['Gross'], line['Fee'], line['Balance'], line['Transaction ID']
+                    print Decimal(total), line['Gross'], line['Fee'], line['Balance'], line['Transaction ID']
                     exit()
 
     for filenum in range(0, int(math.ceil(len(transactions) / 1000.0))):
